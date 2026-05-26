@@ -4,6 +4,9 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [svelte()],
+  define: {
+    'process.argv': '["", ""]'
+  },
   resolve: {
     alias: {
       slangmath: resolve('src/lib/slangmath-demo.js')
