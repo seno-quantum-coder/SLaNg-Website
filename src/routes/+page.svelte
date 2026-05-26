@@ -32,6 +32,22 @@
   let trigArg = 'x';
   let trigEval = '1.5708';
 
+  // Symbolic playground inputs
+  let symbolicExpr = 'sin(x^2) + x^3 / 3';
+  let symbolicVar = 'x';
+  let symbolicEval = '2';
+  let symbolicMode = 'differentiate';
+
+  // Linear algebra inputs
+  let matrixInput = '4,1,2\n1,3,0\n2,0,5';
+  let vectorInput = '7,8,3';
+
+  // ODE inputs
+  let odeRate = '0.8';
+  let odeInitial = '1';
+  let odeEnd = '3';
+  let odeStep = '0.25';
+
   onMount(async () => {
     try {
       slang = await import('slangmath');
@@ -42,7 +58,36 @@
   });
 
   function parseCoeffs(str) {
-    return str.split(',').map(Number);
+    const coeffs = str.split(',').map(v => Number(v.trim()));
+    if (coeffs.some(v => !Number.isFinite(v))) {
+      throw new Error('Coefficients must be comma-separated numbers.');
+    }
+    return coeffs;
+  }
+
+  function parseMatrix(str) {
+    const rows = str.trim().split(/\n+/).map(row => row.split(',').map(v => Number(v.trim())));
+    if (!rows.length || rows.some(row => row.some(v => !Number.isFinite(v)))) {
+      throw new Error('Matrix rows must contain comma-separated numbers.');
+    }
+    const width = rows[0].length;
+    if (rows.some(row => row.length !== width)) {
+      throw new Error('Every matrix row must have the same number of values.');
+    }
+    return rows;
+  }
+
+  function parseVector(str) {
+    const vector = str.split(',').map(v => Number(v.trim()));
+    if (vector.some(v => !Number.isFinite(v))) {
+      throw new Error('Vector must contain comma-separated numbers.');
+    }
+    return vector;
+  }
+
+  function formatNumber(value) {
+    if (!Number.isFinite(value)) return String(value);
+    return String(Math.round(value * 1e8) / 1e8);
   }
 
   function run() {
@@ -56,7 +101,9 @@
         simplifyFraction, evaluateFraction, evaluatePolynomial, differentiateFraction,
         numericalIntegrateFraction, slangToLatex, latexToSlang,
         gradient, hessian, tangentPlane, findCriticalPoints,
-        createFunction, evaluateFunction, extendedSlangToLatex
+        createFunction, evaluateFunction, extendedSlangToLatex,
+        parseExpr, symDiff, symEval, symIntegrate, symSimplify, symToLatex,
+        det, solve, trace, rk4
       } = slang;
 
       if (activeTab === 'polynomial') {
@@ -131,6 +178,51 @@
         latexOutput = `LaTeX: ${latex}`;
       }
 
+      if (activeTab === 'symbolic') {
+        const ast = parseExpr(symbolicExpr);
+        const simplified = symSimplify(ast);
+        const x = Number(symbolicEval);
+        let result = simplified;
+        let valueLabel = 'Input';
+
+        if (symbolicMode === 'differentiate') {
+          result = symSimplify(symDiff(ast, symbolicVar));
+          valueLabel = `d/d${symbolicVar}`;
+        }
+
+        if (symbolicMode === 'integrate') {
+          result = symSimplify(symIntegrate(ast, symbolicVar));
+          valueLabel = `Integral d${symbolicVar}`;
+        }
+
+        const numeric = Number.isFinite(x) ? symEval(result, { [symbolicVar]: x }) : NaN;
+        output = `${valueLabel} result tree:\n${JSON.stringify(result, null, 2)}\n\nAt ${symbolicVar}=${symbolicEval}: ${formatNumber(numeric)}`;
+        latexOutput = `Input: ${symToLatex(simplified)}\nResult: ${symToLatex(result)}`;
+      }
+
+      if (activeTab === 'matrix') {
+        const A = parseMatrix(matrixInput);
+        const b = parseVector(vectorInput);
+        if (A.length !== A[0].length) throw new Error('Matrix must be square for determinant and solve.');
+        if (b.length !== A.length) throw new Error('Vector length must match matrix row count.');
+        const solution = solve(A, b).map(formatNumber);
+        output = `A = ${JSON.stringify(A)}\nb = ${JSON.stringify(b)}\n\ntrace(A) = ${formatNumber(trace(A))}\ndet(A) = ${formatNumber(det(A))}\nsolution x = [${solution.join(', ')}]`;
+        latexOutput = `Solves Ax=b for a ${A.length}×${A.length} system using LU decomposition.`;
+      }
+
+      if (activeTab === 'ode') {
+        const r = Number(odeRate);
+        const y0 = Number(odeInitial);
+        const tEnd = Number(odeEnd);
+        const h = Number(odeStep);
+        if (![r, y0, tEnd, h].every(Number.isFinite)) throw new Error('ODE inputs must be numbers.');
+        const result = rk4((t, y) => r * y, 0, y0, tEnd, h);
+        const samples = result.t.map((t, i) => ({ t: formatNumber(t), y: formatNumber(result.y[i]) }));
+        const last = samples[samples.length - 1];
+        output = `Equation: y' = ${r}y\nMethod: ${result.method.toUpperCase()}\nSteps: ${samples.length - 1}\nFinal: y(${last.t}) = ${last.y}\n\nSamples:\n${samples.slice(0, 12).map(p => `t=${p.t}, y=${p.y}`).join('\n')}`;
+        latexOutput = `Analytic reference: y(t)=y_0 e^{rt}`;
+      }
+
     } catch (e) {
       error = e.message;
     }
@@ -139,14 +231,26 @@
   $: if (loaded && activeTab) run();
 
   const tabs = [
+    { id: 'symbolic', label: 'Symbolic', icon: '∂' },
     { id: 'polynomial', label: 'Polynomial', icon: '∑' },
     { id: 'fraction', label: 'Rational', icon: '⅟' },
     { id: 'latex', label: 'LaTeX ↔', icon: '∫' },
     { id: 'calculus', label: 'Multivariable', icon: '∇' },
     { id: 'trig', label: 'Trig Funcs', icon: 'sin' },
+    { id: 'matrix', label: 'Matrix', icon: '▦' },
+    { id: 'ode', label: 'ODE', icon: 'ẏ' },
+  ];
+
+  const examples = [
+    { label: 'Chain rule', tab: 'symbolic', apply: () => { symbolicExpr = 'sin(x^2) + cos(x)'; symbolicMode = 'differentiate'; symbolicEval = '1.57'; } },
+    { label: 'Quotient', tab: 'fraction', apply: () => { fracNumi = '1,0,1'; fracDeno = '1,-1'; fracEvalX = '3'; } },
+    { label: 'Paraboloid', tab: 'calculus', apply: () => { gradPoint = '2,3'; } },
+    { label: 'LU solve', tab: 'matrix', apply: () => { matrixInput = '4,1,2\n1,3,0\n2,0,5'; vectorInput = '7,8,3'; } },
+    { label: 'Growth ODE', tab: 'ode', apply: () => { odeRate = '0.8'; odeInitial = '1'; odeEnd = '3'; odeStep = '0.25'; } }
   ];
 
   function setTab(t) { activeTab = t; output = ''; latexOutput = ''; error = ''; }
+  function loadExample(example) { example.apply(); setTab(example.tab); }
 </script>
 
 <svelte:head>

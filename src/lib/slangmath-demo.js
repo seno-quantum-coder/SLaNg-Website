@@ -31,6 +31,9 @@ export {
   symToLatex
 } from '../../../slang-symbolic.js';
 
+export { det, solve, trace } from '../../../slang-linalg.js';
+export { rk4 } from '../../../slang-ode.js';
+
 export function polynomial(coeffs, variable = 'x') {
   const terms = [];
   const degree = coeffs.length - 1;
