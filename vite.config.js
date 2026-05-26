@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       slangmath: resolve('src/lib/slangmath-demo.js'),
-      '$slang': resolve('..')
+      '$slangpkg': resolve('node_modules/slangmath')
     }
   },
   cacheDir: '/tmp/vite-cache'
