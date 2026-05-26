@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [svelte()],
   resolve: {
     alias: {
-      slangmath: resolve('../slang-math.js')
+      slangmath: resolve('src/lib/slangmath-demo.js')
     }
   },
   cacheDir: '/tmp/vite-cache'

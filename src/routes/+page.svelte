@@ -53,7 +53,7 @@
     try {
       const {
         createTerm, createFraction, polynomial,
-        simplifyFraction, evaluateFraction, differentiateFraction,
+        simplifyFraction, evaluateFraction, evaluatePolynomial, differentiateFraction,
         numericalIntegrateFraction, slangToLatex, latexToSlang,
         gradient, hessian, tangentPlane, findCriticalPoints,
         createFunction, evaluateFunction, extendedSlangToLatex
@@ -108,8 +108,15 @@
         const [x0, y0] = gradPoint.split(',').map(Number);
         const grad = gradient(surface, ['x', 'y']);
         const hess = hessian(surface, ['x', 'y']);
-        const tangent = tangentPlane(surface, x0, y0);
         const critical = findCriticalPoints(surface, ['x', 'y']);
+        const point = { x: x0, y: y0 };
+        const z0 = evaluatePolynomial(surface, point);
+        const fx0 = evaluatePolynomial(grad.x, point);
+        const fy0 = evaluatePolynomial(grad.y, point);
+        const tangent = {
+          point: { ...point, z: z0 },
+          normal: { x: -fx0, y: -fy0, z: 1 }
+        };
 
         output = `Surface: f(x,y) = x² + y²\n\nGradient:\n  ∂f/∂x = ${JSON.stringify(grad.x?.terms)}\n  ∂f/∂y = ${JSON.stringify(grad.y?.terms)}\n\nHessian Matrix:\n${JSON.stringify(hess, null, 2)}\n\nTangent Plane at (${x0}, ${y0}):\n  Point: ${JSON.stringify(tangent.point)}\n  Normal: ${JSON.stringify(tangent.normal)}\n\nCritical Points: ${JSON.stringify(critical)}`;
         latexOutput = `Gradient at (${x0},${y0}): ∇f = (${2*x0}, ${2*y0})`;
