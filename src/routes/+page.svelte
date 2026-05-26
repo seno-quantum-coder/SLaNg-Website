@@ -255,6 +255,8 @@
 
 <svelte:head>
   <title>SLaNg Math — Live Demo</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="apple-touch-icon" href="/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 </svelte:head>
@@ -264,7 +266,7 @@
 
   <header>
     <div class="logo-area">
-      <span class="logo-symbol">∫</span>
+      <img class="logo-symbol" src="/logo.png" alt="SLaNg Math logo" />
       <div>
         <h1>SLaN<span class="accent">g</span></h1>
         <p class="tagline">Saad's Language for Analytical Numerics &amp; Geometry</p>
@@ -561,6 +563,7 @@ result.y.at(-1);</code></pre>
   </section>
 
   <footer>
+    <img class="footer-logo" src="/logo.png" alt="SLaNg Math logo" />
     <p>SLaNg Math by <strong>Muhammad Saad Amin</strong> · MIT License</p>
     <p><code>npm i slangmath</code></p>
   </footer>
@@ -612,10 +615,11 @@ result.y.at(-1);</code></pre>
   }
 
   .logo-symbol {
-    font-size: 48px;
-    color: #38bdf8;
-    font-family: 'IBM Plex Mono', monospace;
-    line-height: 1;
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    flex: 0 0 auto;
+    filter: drop-shadow(0 10px 22px rgba(56, 189, 248, 0.18));
   }
 
   h1 {
@@ -1007,8 +1011,16 @@ result.y.at(-1);</code></pre>
     display: flex;
     flex-direction: column;
     gap: 6px;
+    align-items: center;
     position: relative;
     z-index: 1;
+  }
+
+  .footer-logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 18px rgba(56, 189, 248, 0.16));
   }
 
   footer strong { color: #94a3b8; }

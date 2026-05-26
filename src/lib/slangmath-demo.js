@@ -1,4 +1,4 @@
-import { createFraction, createTerm } from '../../../slang-basic.js';
+import { createFraction, createTerm } from '$slang/slang-basic.js';
 
 export {
   createTerm,
@@ -8,9 +8,9 @@ export {
   evaluatePolynomial,
   numericalIntegrateFraction,
   simplifyFraction
-} from '../../../slang-basic.js';
+} from '$slang/slang-basic.js';
 
-export { latexToSlang, slangToLatex } from '../../../slang-convertor.js';
+export { latexToSlang, slangToLatex } from '$slang/slang-convertor.js';
 
 export {
   createFunction,
@@ -20,7 +20,7 @@ export {
   gradient,
   hessian,
   tangentPlane
-} from '../../../slang-extended.js';
+} from '$slang/slang-extended.js';
 
 export {
   parseExpr,
@@ -29,10 +29,10 @@ export {
   symIntegrate,
   symSimplify,
   symToLatex
-} from '../../../slang-symbolic.js';
+} from '$slang/slang-symbolic.js';
 
-export { det, solve, trace } from '../../../slang-linalg.js';
-export { rk4 } from '../../../slang-ode.js';
+export { det, solve, trace } from '$slang/slang-linalg.js';
+export { rk4 } from '$slang/slang-ode.js';
 
 export function polynomial(coeffs, variable = 'x') {
   const terms = [];
