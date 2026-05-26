@@ -2,6 +2,7 @@
   "name": "slangmath-site",
   "version": "1.0.0",
   "scripts": {
+    "prebuild": "node fix.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
