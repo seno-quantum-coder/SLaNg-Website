@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  let activeTab = 'polynomial';
+  let activeTab = 'symbolic';
   let output = '';
   let latexOutput = '';
   let error = '';
@@ -280,10 +280,22 @@
   <section class="hero">
     <div class="hero-text">
       <p>A powerful JS library for symbolic &amp; numerical mathematics. Compute derivatives, integrals, gradients, Taylor series, LaTeX conversion, and more — all without a single dependency.</p>
+      <div class="quick-examples">
+        {#each examples as example}
+          <button on:click={() => loadExample(example)}>{example.label}</button>
+        {/each}
+      </div>
     </div>
-    <div class="install-box">
-      <span class="install-label">Install</span>
-      <code>npm i slangmath</code>
+    <div class="hero-panel">
+      <div class="install-box">
+        <span class="install-label">Install</span>
+        <code>npm i slangmath</code>
+      </div>
+      <div class="mini-stats">
+        <span><strong>8</strong> live tools</span>
+        <span><strong>35</strong> browser modules</span>
+        <span><strong>0</strong> runtime deps</span>
+      </div>
     </div>
   </section>
 
@@ -303,6 +315,39 @@
           <span class="spin">⚙</span> Loading slangmath...
         </div>
       {:else}
+
+      <!-- SYMBOLIC TAB -->
+      {#if activeTab === 'symbolic'}
+        <div class="inputs">
+          <div class="field wide">
+            <label>Expression</label>
+            <input bind:value={symbolicExpr} on:input={run} placeholder="sin(x^2) + x^3 / 3" />
+            <span class="hint">Supports +, -, *, /, ^, parentheses, trig, exp, ln, sqrt, abs</span>
+          </div>
+          <div class="field">
+            <label>Operation</label>
+            <select bind:value={symbolicMode} on:change={run}>
+              <option value="differentiate">Differentiate</option>
+              <option value="integrate">Integrate</option>
+              <option value="simplify">Simplify</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Variable</label>
+            <input bind:value={symbolicVar} on:input={run} maxlength="1" />
+          </div>
+          <div class="field">
+            <label>Evaluate at {symbolicVar} =</label>
+            <input type="number" step="0.01" bind:value={symbolicEval} on:input={run} />
+          </div>
+        </div>
+        <div class="code-hint">
+          <pre><code>import {'{'} parseExpr, symDiff, symIntegrate, symSimplify, symToLatex {'}'} from 'slangmath';
+const ast = parseExpr('{symbolicExpr}');
+const result = symSimplify({symbolicMode === 'integrate' ? `symIntegrate(ast, '${symbolicVar}')` : symbolicMode === 'differentiate' ? `symDiff(ast, '${symbolicVar}')` : 'ast'});
+symToLatex(result);</code></pre>
+        </div>
+      {/if}
 
       <!-- POLYNOMIAL TAB -->
       {#if activeTab === 'polynomial'}
@@ -419,6 +464,54 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
         </div>
       {/if}
 
+      <!-- MATRIX TAB -->
+      {#if activeTab === 'matrix'}
+        <div class="inputs">
+          <div class="field wide">
+            <label>Matrix A</label>
+            <textarea bind:value={matrixInput} on:input={run} rows="4" placeholder="4,1,2&#10;1,3,0&#10;2,0,5"></textarea>
+            <span class="hint">One row per line, comma-separated values</span>
+          </div>
+          <div class="field wide">
+            <label>Vector b</label>
+            <input bind:value={vectorInput} on:input={run} placeholder="7,8,3" />
+          </div>
+        </div>
+        <div class="code-hint">
+          <pre><code>import {'{'} det, trace, solve {'}'} from 'slangmath';
+const A = matrixRows;
+const b = [{vectorInput}];
+solve(A, b);</code></pre>
+        </div>
+      {/if}
+
+      <!-- ODE TAB -->
+      {#if activeTab === 'ode'}
+        <div class="inputs">
+          <div class="field">
+            <label>Rate r</label>
+            <input type="number" step="0.1" bind:value={odeRate} on:input={run} />
+          </div>
+          <div class="field">
+            <label>Initial y(0)</label>
+            <input type="number" step="0.1" bind:value={odeInitial} on:input={run} />
+          </div>
+          <div class="field">
+            <label>End time</label>
+            <input type="number" step="0.1" bind:value={odeEnd} on:input={run} />
+          </div>
+          <div class="field">
+            <label>Step size</label>
+            <input type="number" step="0.05" bind:value={odeStep} on:input={run} />
+          </div>
+        </div>
+        <div class="code-hint">
+          <pre><code>import {'{'} rk4 {'}'} from 'slangmath';
+const result = rk4((t, y) => {odeRate} * y, 0, {odeInitial}, {odeEnd}, {odeStep});
+result.y.at(-1);</code></pre>
+        </div>
+      {/if}
+
       <!-- OUTPUT -->
       <div class="output-area">
         {#if error}
@@ -493,8 +586,8 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+      linear-gradient(rgba(56, 189, 248, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(248, 181, 72, 0.018) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
@@ -553,14 +646,14 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     padding: 3px 10px;
     border: 1px solid rgba(56,189,248,0.3);
     border-radius: 20px;
-    color: #38bdf8;
-    background: rgba(56,189,248,0.05);
+    color: #c7d2fe;
+    background: rgba(129,140,248,0.08);
   }
 
   .hero {
-    padding: 40px 0 32px;
+    padding: 34px 0 30px;
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 40px;
     flex-wrap: wrap;
     position: relative;
@@ -579,17 +672,70 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     max-width: 520px;
   }
 
+  .quick-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .quick-examples button {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: #cbd5e1;
+    border-radius: 7px;
+    padding: 8px 11px;
+    font: 600 12px 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+
+  .quick-examples button:hover {
+    border-color: rgba(248,181,72,0.45);
+    color: #fde68a;
+    background: rgba(248,181,72,0.07);
+  }
+
+  .hero-panel {
+    display: grid;
+    gap: 10px;
+    min-width: 285px;
+  }
+
   .install-box {
     display: flex;
     align-items: center;
     gap: 12px;
     background: rgba(56,189,248,0.07);
     border: 1px solid rgba(56,189,248,0.25);
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 14px 20px;
     font-family: 'IBM Plex Mono', monospace;
     white-space: nowrap;
     flex-shrink: 0;
+  }
+
+  .mini-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .mini-stats span {
+    min-width: 0;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.035);
+    border-radius: 8px;
+    padding: 10px;
+    color: #94a3b8;
+    font: 10px/1.4 'IBM Plex Mono', monospace;
+  }
+
+  .mini-stats strong {
+    display: block;
+    color: #f8b548;
+    font-size: 17px;
+    line-height: 1.1;
   }
 
   .install-label {
@@ -611,7 +757,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
 
   .tabs {
     display: flex;
-    gap: 0;
+    gap: 2px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
     margin-bottom: 0;
     flex-wrap: wrap;
@@ -624,7 +770,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     font-family: 'Syne', sans-serif;
     font-size: 13px;
     font-weight: 600;
-    padding: 12px 18px;
+    padding: 12px 14px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
@@ -638,7 +784,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
   .tab.active {
     color: #38bdf8;
     border-bottom-color: #38bdf8;
-    background: rgba(56,189,248,0.04);
+    background: rgba(56,189,248,0.055);
   }
 
   .tab-icon {
@@ -651,7 +797,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(255,255,255,0.07);
     border-top: none;
-    border-radius: 0 0 12px 12px;
+    border-radius: 0 0 8px 8px;
     padding: 28px;
     backdrop-filter: blur(8px);
   }
@@ -692,7 +838,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     font-family: 'IBM Plex Mono', monospace;
   }
 
-  input, select {
+  input, select, textarea {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 7px;
@@ -705,7 +851,13 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     width: 100%;
   }
 
-  input:focus, select:focus {
+  textarea {
+    min-height: 110px;
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  input:focus, select:focus, textarea:focus {
     border-color: rgba(56,189,248,0.5);
     background: rgba(56,189,248,0.04);
   }
@@ -720,7 +872,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     background: rgba(0,0,0,0.4);
     border: 1px solid rgba(255,255,255,0.06);
     border-left: 3px solid #38bdf8;
-    border-radius: 8px;
+    border-radius: 7px;
     padding: 14px 16px;
     margin-bottom: 20px;
     overflow-x: auto;
@@ -766,7 +918,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     overflow: auto;
   }
 
-  .latex-block { border-color: rgba(56,189,248,0.2); }
+  .latex-block { border-color: rgba(52,211,153,0.22); }
 
   .out-label {
     font-size: 10px;
@@ -780,7 +932,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
   .out-block pre {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
-    color: #a5f3fc;
+    color: #c4f1e4;
     white-space: pre-wrap;
     word-break: break-all;
     line-height: 1.6;
@@ -810,7 +962,7 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
   .feature-card {
     background: rgba(15,23,42,0.6);
     border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 22px;
     transition: border-color 0.2s, transform 0.2s;
   }
@@ -819,6 +971,10 @@ extendedSlangToLatex(expr); // LaTeX output</code></pre>
     border-color: rgba(56,189,248,0.3);
     transform: translateY(-2px);
   }
+
+  .feature-card:nth-child(3n) .f-icon { color: #f8b548; }
+  .feature-card:nth-child(3n + 1) .f-icon { color: #38bdf8; }
+  .feature-card:nth-child(3n + 2) .f-icon { color: #34d399; }
 
   .f-icon {
     display: block;
